@@ -1,0 +1,4 @@
+*.pyc
+.repopickle_*
+.idea/
+/repoc

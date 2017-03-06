@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-class Stock(object):
+class StockInfo(object):
     def __init__(self, **kwargs):
         self.symbol = kwargs['symbol']  # self.symbol= "SH600458"
         self.exchange = kwargs['exchange']  # self.exchange= "SH"

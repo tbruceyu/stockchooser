@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-import gzip
 import json
-import urllib2
-from StringIO import StringIO
-from abc import ABCMeta, abstractmethod
 
-from stock import Stock
+import time
+
+import http_helper
+import helper
+from abc import ABCMeta, abstractmethod
+from kline import Unit, Kline
+
+from stockinfo import StockInfo
 
 HTTP_HEADER = {
     'User-Agent': 'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6',
@@ -41,7 +44,8 @@ class BaseDataSource(object):
 
 
 class XueQiu(BaseDataSource):
-    info_url = "https://xueqiu.com/v4/stock/quote.json?code="
+    info_url = "https://xueqiu.com/v4/stock/quote.json?code=%s"
+    kline_url = "https://xueqiu.com/stock/forchartk/stocklist.json?symbol=%s&period=1day&type=before&begin=%ld&end=%ld&_=%ld"
     stock = None
 
     def __init__(self, symbol):
@@ -49,22 +53,33 @@ class XueQiu(BaseDataSource):
 
     def __info_to_obj(self, json_data):
         data_map = json.loads(json_data)[self.symbol]
-        stock = Stock(**data_map)
+        stock = StockInfo(**data_map)
         return stock
 
     def get_stock_info(self):
         if self.stock is not None:
             return self.stock
-        request_url = self.info_url + self.symbol
-        request = urllib2.Request(request_url, None, HTTP_HEADER)
-        response = urllib2.urlopen(request, timeout=10)
-        if response.info().get('Content-Encoding') == 'gzip':
-            buf = StringIO(response.read())
-            f = gzip.GzipFile(fileobj=buf)
-            data = f.read()
-            self.stock = self.__info_to_obj(data)
-            return self.stock
-        return None
+        request_url = self.info_url % self.symbol
+        json_data = http_helper.get_url(request_url, HTTP_HEADER)
+        self.stock = self.__info_to_obj(json_data)
+        return self.stock
+
+    def __kline_to_obj_list(self, json_data):
+        chart_list = json.loads(json_data)['chartlist']
+        list = []
+        for chat in chart_list:
+            chat['time'] = helper.format_gmt_time(chat['time'])
+            unit = Unit(**chat)
+            list.append(unit)
+        return list
+
+    def get_month_kline(self):
+        now = helper.get_time_stamp_ms()
+        three_month_ago = now - 3600 * 24 * 30 * 1000 * 3
+        request_url = self.kline_url % (self.symbol, three_month_ago, now, now)
+        json_data = http_helper.get_url(request_url, HTTP_HEADER)
+        unit_list = self.__kline_to_obj_list(json_data)
+        return Kline(self.stock, unit_list)
 
     def to_unit(self):
         pass

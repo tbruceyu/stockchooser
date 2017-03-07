@@ -20,7 +20,9 @@ class GreatUp(Indicator):
     @staticmethod
     def measure(unit):
         if unit.get_up_shadow_percent() < GREAT_THRESHOLD \
-                and unit.get_down_shadow_percent() < GREAT_THRESHOLD and unit.is_up():
+                and unit.get_down_shadow_percent() < GREAT_THRESHOLD \
+                and unit.percent >= 5.0 \
+                and unit.is_up():
             return True
         return False
 
@@ -33,7 +35,9 @@ class GreatDown(Indicator):
     @staticmethod
     def measure(unit):
         if unit.get_up_shadow_percent() < GREAT_THRESHOLD \
-                and unit.get_down_shadow_percent() < GREAT_THRESHOLD and not unit.is_up():
+                and unit.get_down_shadow_percent() < GREAT_THRESHOLD \
+                and unit.percent >= 5.0 \
+                and not unit.is_up():
             return True
         return False
 
@@ -45,7 +49,7 @@ class HammerUp(Indicator):
     @staticmethod
     def measure(unit):
         if unit.get_up_shadow_percent() > GREAT_THRESHOLD \
-                and unit.get_down_shadow_percent() == HUMMER_HEAD_THRESHOLD and unit.is_up():
+                and unit.get_down_shadow_percent() < HUMMER_HEAD_THRESHOLD and unit.is_up():
             return True
         return False
 
@@ -58,9 +62,10 @@ class HammerDown(Indicator):
     @staticmethod
     def measure(unit):
         if unit.get_down_shadow_percent() > GREAT_THRESHOLD \
-                and unit.get_up_shadow_percent() == HUMMER_HEAD_THRESHOLD and not unit.is_up():
+                and unit.get_up_shadow_percent() < HUMMER_HEAD_THRESHOLD and not unit.is_up():
             return True
         return False
+
 
 class IndicatorBuilder(object):
     all_indicators = {GreatUp, GreatDown, HammerUp, HammerDown}

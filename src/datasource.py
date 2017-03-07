@@ -73,13 +73,18 @@ class XueQiu(BaseDataSource):
             list.append(unit)
         return list
 
-    def get_month_kline(self):
+    def get_quarter_kline(self):
         now = helper.get_time_stamp_ms()
         three_month_ago = now - 3600 * 24 * 30 * 1000 * 3
         request_url = self.kline_url % (self.symbol, three_month_ago, now, now)
-        json_data = http_helper.get_url(request_url, HTTP_HEADER)
-        unit_list = self.__kline_to_obj_list(json_data)
-        return Kline(self.stock, unit_list)
+        try:
+            json_data = http_helper.get_url(request_url, HTTP_HEADER)
+            unit_list = self.__kline_to_obj_list(json_data)
+            if len(unit_list) is 0:
+                return None
+            return Kline(self.stock, unit_list)
+        except KeyError:
+            return None
 
     def to_unit(self):
         pass

@@ -1,6 +1,10 @@
+import os
 import time
-import types
+import ConfigParser
 from var_dump import var_dump
+
+CONFIG_FILE = 'conf.cfg'
+
 
 def get_time_stamp_ms():
     return time.time() * 1000
@@ -18,15 +22,46 @@ def dump(obj):
     var_dump(obj)
 
 
-def dump_obj(obj):
-    if type(obj) == list:
-        for item in obj:
-            __dump_obj(item)
+def black_symbol(symbol):
+    black_file = file('black.txt', 'a+')
+    lines = black_file.readlines()
+    for line in lines:
+        if symbol == line:
+            black_file.close()
+            return
+    black_file.write(symbol + "\n")
+    log("helper", "black symbol:" + symbol)
+    black_file.close()
 
 
-def __dump_obj(obj, level=0):
-    for key, value in obj.__dict__.items():
-        if not isinstance(value, types.InstanceType):
-            print " " * level + "%s -> %s" % (key, value)
-        else:
-            dump_obj(value, level + 2)
+def get_black_symbol_map():
+    black_map = {}
+    if not os.path.exists('black.txt'):
+        return black_map
+    black_file = file('black.txt', 'r')
+    lines = black_file.readlines()
+    black_file.close()
+    for line in lines:
+        line = line.strip()
+        black_map[line] = True
+    return black_map
+
+
+def save_runtime_config(key, value):
+    conf = ConfigParser.ConfigParser()
+    conf.add_section("runtime")
+    conf.set("runtime", key, value)
+    fp = open(CONFIG_FILE, "w")
+    conf.write(fp)
+    fp.close()
+
+
+def get_runtime_config(key):
+    if not os.path.exists(CONFIG_FILE):
+        return None
+    cf = ConfigParser.ConfigParser()
+    try:
+        cf.read(CONFIG_FILE)
+    except os.errno:
+        return None
+    return cf.get("runtime", key)

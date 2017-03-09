@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import datetime
 
 RATIO_CONST = 100
 
@@ -45,6 +46,18 @@ class Kline(object):
             if diff_percent < 20:
                 return True
         return False
+
+    # 判断是否已经停牌
+    def is_stop(self):
+        latest_unit = self.get_latest()
+        today_date = datetime.datetime.today()
+        last_unit_date = datetime.datetime.fromtimestamp(int(latest_unit.time / 1000))
+        if today_date.weekday() > 5 and last_unit_date.weekday() == 5:
+            # 如果是周末, 并且是周5
+            return False
+        return not (today_date.year == last_unit_date.year
+                    and today_date.month == last_unit_date.month
+                    and today_date.day == last_unit_date.day)
 
 
 class Unit(object):

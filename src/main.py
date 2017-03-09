@@ -29,6 +29,10 @@ if __name__ == '__main__':
             # 如果不能拿到K线,说明这个股票有问题,需要拉黑
             helper.black_symbol(symbol)
             continue
+        if kline.is_stop():
+            # 如果停牌,则忽略
+            helper.log("stock", name + " 已停牌")
+            continue
         print name + ":" + symbol + " LP:" + str(kline.is_latest_low_point())
         time.sleep(1)
         # ind_builder = indicator.IndicatorBuilder()

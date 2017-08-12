@@ -19,14 +19,14 @@ HTTP_HEADER = {
     'Pragma': 'no-cache',
     'Accept-Encoding': 'gzip, deflate, sdch, br',
     'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,zh-TW;q=0.4',
-    'Cookie': 's=691915x1tw; webp=1; bid=a4c7e7b2b5b089672ec38f911de150a4_iyz949tq; ' \
-              'aliyungf_tc=AQAAAKoksXWhNQcAEvcnaiQPaDRXjqqF; snbim_minify=true;' \
-              ' xq_a_token=d99e7179f8df67bdf02ab6444d1f74a8091818b9;' \
-              ' xq_r_token=01013b7c908ec46fa80f9cc2a66b917b6a8121dc;' \
-              ' u=121488704118566; Hm_lvt_1db88642e346389874251b5a1eded6e3=1486720344,' \
-              '1487501160,1487565836,1488685258; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1488704119;' \
-              ' __utma=1.1813155390.1486697195.1488686123.1488704119.7;' \
-              ' __utmb=1.1.10.1488704119; __utmc=1; __utmz=1.1486697195.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none)'
+    'Cookie': 's=691915x1tw; webp=1; bid=a4c7e7b2b5b089672ec38f911de150a4_iyz949tq; device_id=b2479fe4a5560872b'
+              'b6071e36d8db867; remember=1; remember.sig=K4F3faYzmVuqC0iXIERCQf55g2Y; xq_a_token=8b97ab28179b040'
+              '7a8248af93817f23f7943a4cf; xq_a_token.sig=1lS8Im4PTKV4NhUeET7EKIWjS_I; xq_r_token=657750dd45b6dbf9'
+              'efc5d624c66d67320bee5a3c; xq_r_token.sig=_A-by6x6nLXo9C33XAtFqLjA_NA; xq_is_login=1; xq_is_login.sig'
+              '=J3LxgPVPUzbBg3Kee_PquUfih7Q; u=3624172871; u.sig=nN2ADMRg5z6s-MVHoUWkaRCin68; aliyungf_tc=AQAAACt3'
+              'X2ogUwwAEpM0eHRQVSVT97Lz; Hm_lvt_1db88642e346389874251b5a1eded6e3=1501724508,1501996041,1502084866,15'
+              '02156458; Hm_lpvt_1db88642e346389874251b5a1eded6e3=1502174421; __utma=1.1813155390.1486697195.15021'
+              '58717.1502173678.62; __utmc=1; __utmz=1.1489325639.23.2.utmcsr=baidu|utmccn=(organic)|utmcmd=organic'
 }
 
 
@@ -45,7 +45,7 @@ class BaseDataSource(object):
 
 class XueQiu(BaseDataSource):
     info_url = "https://xueqiu.com/v4/stock/quote.json?code=%s"
-    kline_url = "https://xueqiu.com/stock/forchartk/stocklist.json?symbol=%s&period=1day&type=before&begin=%ld&end=%ld&_=%ld"
+    kline_url = "https://xueqiu.com/stock/forchartk/stocklist.json?symbol=%s&period=1day&type=normal&begin=%ld&end=%ld&_=%ld"
     stock = None
 
     def __init__(self, symbol):
@@ -76,14 +76,19 @@ class XueQiu(BaseDataSource):
     def get_quarter_kline(self):
         now = helper.get_time_stamp_ms()
         three_month_ago = now - 3600 * 24 * 30 * 1000 * 3
-        request_url = self.kline_url % (self.symbol, three_month_ago, now, now)
+        return self.get_kline_from(three_month_ago, now)
+
+    def get_kline_from(self, from_timestamp, to_timestamp):
+        request_url = self.kline_url % (self.symbol, from_timestamp, to_timestamp, to_timestamp)
         try:
             json_data = http_helper.get_url(request_url, HTTP_HEADER)
             unit_list = self.__kline_to_obj_list(json_data)
             if len(unit_list) is 0:
                 return None
-            return Kline(self.stock, unit_list)
-        except KeyError:
+            kline = Kline(unit_list)
+            kline.set_stock_info(self.stock)
+            return kline
+        except Exception:
             return None
 
     def to_unit(self):

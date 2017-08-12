@@ -4,18 +4,30 @@ import ConfigParser
 from var_dump import var_dump
 
 CONFIG_FILE = 'conf.cfg'
-
+DEBUG = False
 
 def get_time_stamp_ms():
     return time.time() * 1000
 
 
 def format_gmt_time(gmt_time):
-    return long(time.mktime(time.strptime(gmt_time, "%a %b %d %H:%M:%S +0800 %Y")) * 1000)
+    return long(time.mktime(time.strptime(gmt_time, "%a %b %d %H:%M:%S +0800 %Y")))
+
+
+def format_cst_time(cst_time):
+    return long(time.mktime(time.strptime(cst_time, "%a %b %d %H:%M:%S CST %Y")))
+
+
+def timestamp_to_datetime(timestamp):
+    ft = '%Y-%m-%d %H:%M:%S'
+    value = time.localtime(timestamp)
+    dt = time.strftime(ft, value)
+    return dt
 
 
 def log(tag, msg):
-    print tag + ":" + msg
+    if DEBUG:
+        print tag + ":" + msg
 
 
 def dump(obj):

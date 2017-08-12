@@ -2,13 +2,19 @@
 import time
 import datetime
 
+from src.stockinfo import StockInfo
+
 RATIO_CONST = 100
 
 
 class Kline(object):
-    def __init__(self, stock_info, unit_list):
-        self.stock_info = stock_info
+    stock_info = StockInfo
+
+    def __init__(self, unit_list):
         self.unit_list = unit_list
+
+    def set_stock_info(self, stock_info):
+        self.stock_info = stock_info
 
     def get_highest(self):
         highest_unit = self.unit_list[0]
@@ -78,7 +84,7 @@ class Unit(object):
         self.dea = kwargs['dea']
         self.macd = kwargs['macd']
         self.time = kwargs['time']
-        self.human_time = time.strftime('%Y-%m-%d', time.localtime(self.time / 1000))
+        self.human_time = time.strftime('%Y-%m-%d', time.localtime(self.time))
 
     def is_up(self):
         return self.open < self.close
